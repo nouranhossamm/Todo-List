@@ -9,19 +9,11 @@ let updateId = null;
 
 function setupUI(user) {
   if (user) {
-    loginItems.forEach(
-      (item) => (item.style.display = "block")
-    );
-    logoutItems.forEach(
-      (item) => (item.style.display = "none")
-    );
+    loginItems.forEach((item) => (item.style.display = "block"));
+    logoutItems.forEach((item) => (item.style.display = "none"));
   } else {
-    loginItems.forEach(
-      (item) => (item.style.display = "none")
-    );
-    logoutItems.forEach(
-      (item) => (item.style.display = "block")
-    );
+    loginItems.forEach((item) => (item.style.display = "none"));
+    logoutItems.forEach((item) => (item.style.display = "block"));
   }
 }
 
@@ -52,12 +44,16 @@ function renderList(doc) {
     // console.log(e.target);
     let id = e.target.parentElement.parentElement.getAttribute("data-id");
     // console.log(id);
-    db.collection("alltodos")
-      .doc(currentUser.uid)
-      .collection("todos")
-      .doc(id)
-      .delete();
+    res = confirm("This item will be deleted");
+    if (res) {
+      db.collection("alltodos")
+        .doc(currentUser.uid)
+        .collection("todos")
+        .doc(id)
+        .delete();
+    }
   });
+
   editBtn.addEventListener("click", (e) => {
     // console.log("edit");
     updateId =
@@ -72,22 +68,27 @@ function renderList(doc) {
 
 // console.log(document.getElementsByName("newtitle")[0]);
 updateBtn.addEventListener("click", (e) => {
-  newTitle = document.getElementsByName("newtitle")[0].value;
-  db.collection("alltodos")
-    .doc(currentUser.uid)
-    .collection("todos")
-    .doc(updateId)
-    .update({
-      title: newTitle,
-    });
+  newTitle = (document.getElementsByName("newtitle")[0].value).trim();
+  if (newTitle != "") {
+    db.collection("alltodos")
+      .doc(currentUser.uid)
+      .collection("todos")
+      .doc(updateId)
+      .update({
+        title: newTitle,
+      });
+      document.getElementsByName("newtitle")[0].value = "";
+  }
 });
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  db.collection("alltodos").doc(currentUser.uid).collection("todos").add({
-    title: form.title.value,
-  });
-  form.title.value = "";
+  let val = (form.title.value).trim();
+  if (val != "") {
+    db.collection("alltodos").doc(currentUser.uid).collection("todos").add({
+      title: val,
+    });
+  }
 });
 
 function getTodos() {
@@ -114,6 +115,7 @@ function getTodos() {
       changes.forEach((change) => {
         if (change.type == "added") {
           renderList(change.doc);
+          form.title.value = "";
           // console.log(change.doc.data());
         } else if (change.type == "removed") {
           // console.log("removed");
@@ -122,7 +124,7 @@ function getTodos() {
         } else if (change.type == "modified") {
           // console.log("modified");
           let li = todoList.querySelector(`[data-id=${change.doc.id}]`);
-          li.getElementsByTagName("span")[0].textContent = newTitle;
+          li.getElementsByTagName("span")[0].textContent = newTitle.trim();
           newTitle = "";
         }
       });
